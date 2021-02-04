@@ -11,7 +11,7 @@ document.onkeydown = function(evt) {
         var r=confirm("กลับไปหน้าแรก");
         if(r==true)
         {
-            location.href="menuPage.php";
+            location.href="order.php";
         }
         
     }
