@@ -6,14 +6,34 @@
 <link href='https://fonts.googleapis.com/css?family=Kanit' rel='stylesheet'>
 <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">-->
 <?php include 'header.php';?>
+<?php
+$sql="SELECT * from `bagType`";
+$bagType = array();
+$result = $conn->query($sql);
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+    $bagType[] = $row;
+  }
+}
 
+$sql="SELECT * from `orderType`";
+$orderType = array();
+$result = $conn->query($sql);
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+    $orderType[] = $row;
+  }
+}
+
+$tabindex=0;
+?>
     <head>
 
     </head>
-    <body>
+    <body onload=startPage()>
         
         <center>
-        <h1 >Hello World</h1>
+        <img src="mementoLogo.png" alt="Memento Logo">
         <div class="w3-border w3-round">
             <form name="myForm" id="myForm" method="post" enctype="multipart/form-data">
                 <table >
@@ -32,13 +52,10 @@
                     <tr><td>ชื่อ</td><td><input type="text" id="name" name="name"></td></tr>
                     <tr><td>ที่อยู่</td><td><textarea rows="4" id="address" name="address"></textarea></td></tr>
                     <tr><td>เบอร์โทร</td><td><input type="text" id="phoneNumber" name="phoneNumber"></td></tr>
+                    <tr><td>กระเป๋า</td><td><select id="bagType" name="bagType" tabindex="<?php echo $tabindex++;?>"></select></td></tr>
                     <tr><td>ค่าส่ง</td><td><input type="text" id="shippingPrice" name="shippingPrice"></td></tr>
                     <tr><td>สั่งผ่านทาง</td><td>
-                        <select id="orderBy" name="orderBy"><option value="1">Inbox</option>
-                            <option value="2" >Shopify</option>
-                            <option value="3" >Line My Shop</option>
-                            <option value="4" >Shopee</option>
-                            <option value="5" >Lazada</option></select></td></tr>
+                        <select id="orderType" name="orderType"></select></td></tr>
                 
                 </table>
                 <tr><td><input type="submit" id="btnSubmit" value="ยืนยัน" onclick="submitForm()" tabindex="<?php echo $tabindex++;?>"></td>
@@ -47,24 +64,46 @@
         </div>
         <p>จัดส่งแล้ววันนี้</p>
         <?php 
+            $sql="SELECT * from `orderType`";
+            $orderArray = array();
+            $result = $conn->query($sql);
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                $orderArray[] = $row;
+              }
+            }
+            $sql="SELECT * from `bagType`";
+            $bagArray = array();
+            $result = $conn->query($sql);
+            if ($result->num_rows > 0) {
+                while ($row = $result->fetch_assoc()) {
+                $bagArray[] = $row;
+              }
+            }
+            
             $date=(date('Y')+543).(date('-m-d')); //today
             $sql = "SELECT * FROM `order` WHERE `date`='$date'";
+            
             $result = $conn->query($sql);
             if ($result->num_rows > 0) {
                 $i=0;
-                echo "<table><tr><td>เพศ</td><td>ช่วงอายุ</td><td>ชื่อ</td><td>ที่อยู่</td><td>เบอร์โทร</td><td>ค่าส่ง</td><td>จัดส่งโดย</td>";
+                echo "<table><tr><td>เพศ</td><td>ช่วงอายุ</td><td>ชื่อ</td><td>ที่อยู่</td><td>เบอร์โทร</td><td>กระเป๋า</td><td>ค่าส่ง</td><td>จัดส่งโดย</td>";
                 while($row = $result->fetch_assoc()) {
+                    $ิbagType2=$bagArray[intval($row["bag"])-1]['type'];
+                    $orderType2=$orderArray[intval($row["orderBy"])-1]['type'];
                     echo   "<tr><td>".$row["gender"]."</td>
                                 <td>".$row["ageRange"]."</td>
                                 <td>".$row["name"]."</td>
                                 <td>".$row["address"]."</td>
                                 <td>".$row["phoneNumber"]."</td>
+                                <td>".$ิbagType2."</td>
                                 <td>".$row["shippingPrice"]."</td>
-                                <td>".$row["orderBy"]."</td>
+                                <td>".$orderType2."</td>
                                 <td><button id='row'".$i++."> ลบ </button></td></tr>
                             ";
                 }
                 echo "</table>";
+
             }
         ?>
         <div>
@@ -85,7 +124,41 @@
 <script type="text/javascript" src="javascript/sweetAlert.js"></script>
 <script type="text/javascript" src="javascript/goBack.js"></script>
 <script type="text/javascript">
+function startPage(){
+  createSelectElement();
+}
+function createSelectElement()
+{
+  //add bagtype
+  var x = document.getElementById("bagType");
+  var bagType = <?php echo json_encode($bagType); ?>;
+  for(i=0;i<bagType.length;i++){
+    var option = document.createElement("option");
+    if(bagType[i]['id']<10)
+    {
+      option.value = "0"+bagType[i]['id'];
+    }else{
+      option.value = bagType[i]['id'];
+    }
+    option.text =(i+1)+" "+bagType[i]['type'];
+    x.add(option);
+  }
 
+  //add product
+  var x = document.getElementById("orderType");
+  var orderType = <?php echo json_encode($orderType); ?>;
+  for(i=0;i<orderType.length;i++){
+    var option = document.createElement("option");
+    if(orderType[i]['id']<10)
+    {
+      option.value = "0"+orderType[i]['id'];
+    }else{
+      option.value = orderType[i]['id'];
+    }
+    option.text =(i+1)+" "+orderType[i]['type'];
+    x.add(option);
+  }
+}
 function submitForm(){
           //stop submit the form, we will post it manually.
           event.preventDefault();
